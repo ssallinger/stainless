@@ -4,8 +4,10 @@ package stainless
 package frontends.scalac
 
 import extraction.xlang.{trees => xt}
-import scala.tools.nsc.{Global, Settings => NSCSettings, CompilerCommand}
+import scala.tools.nsc.{Global, Settings => NSCSettings, CompilerCommand, SubComponent}
 import scala.reflect.internal.Positions
+
+import scala.collection.mutable.ListBuffer
 
 class ScalaCompiler(settings: NSCSettings, ctx: inox.Context)
   extends Global(settings, new SimpleReporter(settings, ctx.reporter))
@@ -13,18 +15,48 @@ class ScalaCompiler(settings: NSCSettings, ctx: inox.Context)
 
   object stainlessExtraction extends {
     val global: ScalaCompiler.this.type = ScalaCompiler.this
+    val ctx = ScalaCompiler.this.ctx
+  } with SubComponent with CodeExtraction {
+    val phaseName = "stainless"
     val runsAfter = List[String]("refchecks")
     val runsRightAfter = None
-    val ctx = ScalaCompiler.this.ctx
-  } with StainlessExtraction
 
-  object saveImports extends {
-    val global: ScalaCompiler.this.type = ScalaCompiler.this
-    val runsAfter = List[String]("pickler")
-    val runsRightAfter = None
-    val ctx = ScalaCompiler.this.ctx
-  } with SaveImports
-  
+    var units: List[CompilationUnit] = Nil
+
+    def extractProgram = try {
+      val unitsAcc     = new ListBuffer[xt.UnitDef]
+      val classesAcc   = new ListBuffer[xt.ClassDef]
+      val functionsAcc = new ListBuffer[xt.FunDef]
+
+      for (u <- units) {
+        val (unit, classes, functions) = extractUnit(u)
+
+        unitsAcc += unit
+        classesAcc ++= classes
+        functionsAcc ++= functions
+      }
+
+      val program: inox.Program { val trees: xt.type } = new inox.Program {
+        val trees: xt.type = xt
+        val ctx = ScalaCompiler.this.ctx
+        val symbols = xt.NoSymbols.withClasses(classesAcc).withFunctions(functionsAcc)
+      }
+
+      (unitsAcc.toList, program)
+    } catch {
+      case e: ImpureCodeEncounteredException =>
+        reporter.debug("Extraction failed because of:")
+        reporter.debug(e.pos, e.getMessage, e)
+        throw new inox.FatalError(e.getMessage)
+    }
+
+    def newPhase(prev: scala.tools.nsc.Phase): StdPhase = new Phase(prev)
+
+    class Phase(prev: scala.tools.nsc.Phase) extends StdPhase(prev) {
+      def apply(unit: CompilationUnit): Unit = units ::= unit
+    }
+  }
+
   override protected def computeInternalPhases() : Unit = {
     val phs = List(
       syntaxAnalyzer          -> "parse source into ASTs, perform simple desugaring",
@@ -35,7 +67,6 @@ class ScalaCompiler(settings: NSCSettings, ctx: inox.Context)
       superAccessors          -> "add super accessors in traits and nested classes",
       extensionMethods        -> "add extension methods for inline classes",
       pickler                 -> "serialize symbol tables",
-      saveImports             -> "save imports to pass to stainlessExtraction",
       refChecks               -> "reference/override checking, translate nested objects",
       stainlessExtraction     -> "extracts stainless trees out of scala trees"
     )
