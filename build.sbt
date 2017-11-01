@@ -9,7 +9,8 @@ val osName = if (isWindows) "win" else if (isMac) "mac" else "unix"
 val osArch = System.getProperty("sun.arch.data.model")
 
 val inoxVersion = "1.0.2-191-g3b196ab"
-val dottyVersion = "0.1.1-bin-20170429-10a2ce6-NIGHTLY"
+val dottyLibrary = "dotty_0.5"
+val dottyVersion = "0.5.0-bin-20171027-68cc7ee-NIGHTLY"
 
 lazy val nParallel = {
   val p = System.getProperty("parallel")
@@ -34,7 +35,7 @@ lazy val scriptPath = taskKey[String]("Classpath used in the stainless Bash scri
 
 lazy val script = taskKey[Unit]("Generate the stainless Bash script")
 
-lazy val scalaVersionSetting: Setting[_] = scalaVersion := "2.11.8"
+lazy val scalaVersionSetting: Setting[_] = scalaVersion := "2.12.1"
 
 lazy val artifactSettings: Seq[Setting[_]] = Seq(
   version := "0.1",
@@ -223,24 +224,36 @@ lazy val `stainless-scalac` = (project in file("frontends/scalac"))
 lazy val `stainless-dotty-frontend` = (project in file("frontends/dotty"))
   .settings(name := "stainless-dotty-frontend")
   .dependsOn(`stainless-core`)
-  .settings(libraryDependencies += "ch.epfl.lamp" % "dotty_2.11" % dottyVersion % "provided")
+  .settings(libraryDependencies += "ch.epfl.lamp" % dottyLibrary % dottyVersion % "provided")
   .settings(commonSettings)
+  // Make sure the inox project dependency resolves to the scala 2.X project.
+  .settings(projectDependencies ~= (_.map(_.withDottyCompat())))
+  // Make sure all library dependencies resolve to the scala 2.X projects.
+  .settings(libraryDependencies ~= (_.map(_.withDottyCompat())))
+  .settings(scalaVersion := dottyVersion)
 
 lazy val `stainless-dotty` = (project in file("frontends/stainless-dotty"))
   .settings(
     name := "stainless-dotty",
     frontendClass := "dotc.DottyCompiler")
-  .dependsOn(`stainless-dotty-frontend`)
-  // Should truly depend on dotty, overriding the "provided" modifier above:
-  .settings(libraryDependencies += "ch.epfl.lamp" % "dotty_2.11" % dottyVersion)
-  .aggregate(`stainless-dotty-frontend`)
   //.dependsOn(inox % "test->test;it->test,it")
+  .dependsOn(`stainless-dotty-frontend`)
+  .aggregate(`stainless-dotty-frontend`)
+  // Should truly depend on dotty, overriding the "provided" modifier above:
+  .settings(libraryDependencies += "ch.epfl.lamp" % dottyLibrary % dottyVersion)
   .configs(IntegrationTest)
   .settings(commonSettings, commonFrontendSettings, artifactSettings, scriptSettings)
+  // As above, we resolve the library dependencies to scala 2.X projects.
+  .settings(libraryDependencies ~= (_.map(_.withDottyCompat())))
+  // Here we don't want to use the compat mode for stainless-dotty-frontend since it
+  // actually is a dotty project (doesn't have a scala 2.X version).
+  .settings(projectDependencies ~= (_.map { dep =>
+    if (dep.name == "stainless-dotty-frontend") dep else dep.withDottyCompat()
+  }))
+  .settings(scalaVersion := dottyVersion)
 
 lazy val root = (project in file("."))
   .settings(scalaVersionSetting, sourcesInBase in Compile := false)
-  .dependsOn(`stainless-scalac`, `stainless-dotty`)
+  //.dependsOn(`stainless-scalac`, `stainless-dotty`)
   .aggregate(`stainless-core`, `stainless-scalac`, `stainless-dotty`)
-
 

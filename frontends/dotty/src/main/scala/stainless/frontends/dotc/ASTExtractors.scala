@@ -345,10 +345,10 @@ trait ASTExtractors {
 
     object ExConstructor {
       def unapply(tree: tpd.Tree): Option[(Type, Seq[tpd.Tree])] = tree match {
-        case Apply(Select(New(tpt), CONSTRUCTOR), args) =>
+        case Apply(Select(New(tpt), nme.CONSTRUCTOR), args) =>
           Some((tpt.tpe, args))
 
-        case Apply(TypeApply(Select(New(tpt), CONSTRUCTOR), _), args) =>
+        case Apply(TypeApply(Select(New(tpt), nme.CONSTRUCTOR), _), args) =>
           Some((tree.tpe, args))
 
         case Apply(e, args) if (

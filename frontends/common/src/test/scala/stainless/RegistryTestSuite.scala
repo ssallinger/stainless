@@ -86,7 +86,7 @@ class RegistryTestSuite extends FunSuite {
         writeContents(fileMapping, event.contents)
         compiler.run()
         compiler.join()
-        val report = callback.popReport
+        val report = callback.popReport()
 
         if (event.expected.strict) {
           assert(report.functions === event.expected.functions, "Collected functions mismatch expectation (strict)")

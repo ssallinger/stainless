@@ -27,7 +27,7 @@ class CodeExtraction(inoxCtx: inox.Context, cache: SymbolsContext)(implicit val 
   import StructuralExtractors._
 
   lazy val reporter = inoxCtx.reporter
-  implicit val debugSection = DebugSectionExtraction
+  implicit val debugSection: inox.DebugSection = DebugSectionExtraction
 
   implicit def dottyPosToInoxPos(p: Position): inox.utils.Position = {
     if (!p.exists) {
@@ -97,7 +97,7 @@ class CodeExtraction(inoxCtx: inox.Context, cache: SymbolsContext)(implicit val 
   }
 
   // This one never fails, on error, it returns Untyped
-  def stainlessType(tpt: Type)(implicit dctx: DefContext, pos: Position): xt.Type = {
+  private def stainlessType(tpt: Type)(implicit dctx: DefContext, pos: Position): xt.Type = {
     try {
       extractType(tpt)
     } catch {
@@ -887,6 +887,7 @@ class CodeExtraction(inoxCtx: inox.Context, cache: SymbolsContext)(implicit val 
         case None => e
         case Some(xt.Lambda(Seq(vd), post)) =>
           xt.Let(vd, e, xt.Assume(post, vd.toVariable).copiedFrom(e)).copiedFrom(e)
+        case Some(p) => outOfSubsetError(tr, "Postcondition should be a lambda, but got " + p + " instead")
       }
 
       addPre(addPost(uncheckedBody))

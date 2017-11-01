@@ -474,15 +474,9 @@ trait ASTExtractors {
       * visibility. Does not match on case objects or the automatically generated companion
       * objects of case classes (or any synthetic class). */
     object ExObjectDef {
-      def unapply(cd: ClassDef): Option[(String,Template)] = cd match {
-        case ClassDef(_, name, tparams, impl) if
-          (cd.symbol.isModuleClass || cd.symbol.hasPackageFlag) &&
-          tparams.isEmpty &&
-          !cd.symbol.isSynthetic &&
-          !cd.symbol.isCaseClass
-        => {
-          Some((name.toString, impl))
-        }
+      def unapply(md: ModuleDef): Option[(String,Template)] = md match {
+        case ModuleDef(mods, name, impl) if !mods.isCase =>
+          Some(name.toString, impl)
         case _ => None
       }
     }
@@ -543,11 +537,8 @@ trait ASTExtractors {
     }
 
     object ExLazyAccessorFunction {
-      def unapply(dd: DefDef): Option[(Symbol, Type, Tree)] = dd match {
-        case DefDef(_, name, tparams, vparamss, tpt, rhs) if(
-          vparamss.size <= 1 && name != nme.CONSTRUCTOR &&
-          !dd.symbol.isSynthetic && dd.symbol.isAccessor && dd.symbol.isLazy
-        ) =>
+      def unapply(dd: ValOrDefDef): Option[(Symbol, Type, Tree)] = dd match {
+        case ValDef(mods, name, tpt, rhs) if mods.isLazy =>
           Some((dd.symbol, tpt.tpe, rhs))
         case _ => None
       }

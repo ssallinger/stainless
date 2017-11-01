@@ -120,8 +120,8 @@ trait MainHelpers extends inox.MainHelpers {
 
     val watchMode = ctx.options.findOptionOrDefault(optWatch)
     if (watchMode) {
-      val files: Set[File] = compiler.sources.toSet map { file: String => new File(file).getAbsoluteFile }
-      val watcher = new utils.FileWatcher(ctx, files, action = runCycle)
+      val files: Set[File] = compiler.sources.toSet map { (file: String) => new File(file).getAbsoluteFile }
+      val watcher = new utils.FileWatcher(ctx, files, action = runCycle _)
       watcher.run()
     }
 

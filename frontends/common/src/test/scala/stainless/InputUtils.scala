@@ -30,7 +30,7 @@ trait InputUtils {
 
   /** Compile and extract the given files (& the library). */
   def loadFiles(ctx: inox.Context, files: Seq[String]):
-               (Seq[xt.UnitDef], Program { val trees: xt.type }) = {
+               (Seq[xt.UnitDef], inox.Program { val trees: xt.type }) = {
 
     // Use the callback to collect the trees.
     val units = ListBuffer[xt.UnitDef]()

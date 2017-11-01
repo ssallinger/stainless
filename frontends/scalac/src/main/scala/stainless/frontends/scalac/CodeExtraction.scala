@@ -194,6 +194,12 @@ trait CodeExtraction extends ASTExtractors {
         allClasses ++= newClasses
         allFunctions ++= newFunctions
 
+      case md: ModuleDef if md.mods.isCase =>
+        val (xcd, newFunctions) = extractClass(md)
+        classes :+= xcd.id
+        allClasses :+= xcd
+        allFunctions ++= newFunctions
+
       case cd: ClassDef =>
         val (xcd, newFunctions) = extractClass(cd)
         classes :+= xcd.id
@@ -225,8 +231,7 @@ trait CodeExtraction extends ASTExtractors {
     (imports, classes, functions, subs, allClasses, allFunctions)
   }
 
-
-  private def extractObject(obj: ClassDef): (xt.ModuleDef, Seq[xt.ClassDef], Seq[xt.FunDef]) = {
+  private def extractObject(obj: ImplDef): (xt.ModuleDef, Seq[xt.ClassDef], Seq[xt.FunDef]) = {
     val ExObjectDef(_, template) = obj
     val (imports, classes, functions, subs, allClasses, allFunctions) = extractStatic(template.body)
 
@@ -248,7 +253,7 @@ trait CodeExtraction extends ASTExtractors {
     AnyRefClass.tpe
   )
 
-  private def extractClass(cd: ClassDef): (xt.ClassDef, Seq[xt.FunDef]) = {
+  private def extractClass(cd: ImplDef): (xt.ClassDef, Seq[xt.FunDef]) = {
     val sym = cd.symbol
     val id = getIdentifier(sym)
 
@@ -400,7 +405,7 @@ trait CodeExtraction extends ASTExtractors {
     sym: Symbol,
     tparams: Seq[Symbol],
     vparams: Seq[ValDef],
-    rhs: Tree,
+    body: Tree,
     typeParams: Option[Seq[xt.TypeParameter]] = None
   )(implicit dctx: DefContext): xt.FunDef = {
 
@@ -425,13 +430,6 @@ trait CodeExtraction extends ASTExtractors {
       (if (sym.isImplicit) Set(xt.Inline, xt.Implicit) else Set()) ++
       (if (sym.isAccessor) Set(xt.IsField(sym.isLazy)) else Set())
 
-    val body =
-      if (!(flags contains xt.IsField(true))) rhs
-      else rhs match {
-        case Block(List(Assign(_, realBody)), _) => realBody
-        case _ => outOfSubsetError(rhs, "Wrong form of lazy accessor")
-      }
-
     val paramsMap = (vparams.map(_.symbol) zip newParams).map { case (s, vd) =>
       s -> (if (s.isByNameParam) () => xt.Application(vd.toVariable, Seq()).setPos(vd.toVariable) else () => vd.toVariable)
     }.toMap
@@ -441,7 +439,7 @@ trait CodeExtraction extends ASTExtractors {
       .copy(tparams = dctx.tparams ++ (tparams zip ntparams))
       .copy(isExtern = dctx.isExtern || (flags contains xt.Extern))
 
-    val finalBody = if (rhs == EmptyTree) {
+    val finalBody = if (body == EmptyTree) {
       flags += xt.IsAbstract
       xt.NoTree(returnType).setPos(sym.pos)
     } else {
@@ -1302,7 +1300,7 @@ trait CodeExtraction extends ASTExtractors {
       xt.ClassType(getIdentifier(tt.sym), tt.sym.typeParams.map(dctx.tparams))
 
     case SingleType(pre, sym) if sym.isModule =>
-      xt.ClassType(getIdentifier(sym.moduleClass), Nil)
+      xt.ClassType(getIdentifier(sym), Nil)
 
     case SingleType(_, sym) if sym.isTerm =>
       extractType(tpt.widen)
