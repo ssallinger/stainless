@@ -40,12 +40,12 @@ class InliningSuite extends FunSuite with InputUtils {
 
   test("Inlining should occur in fun1") {
     val fun1 = program.lookup[FunDef]("Test.fun1")
-    assert(program.symbols.transitiveCallees(fun1).isEmpty)
+    assert(program.symbols.transitiveCallees(fun1.id).isEmpty)
   }
 
   test("Inlining should occur in fun2") {
     val fun2 = program.lookup[FunDef]("Test.fun2")
-    assert(program.symbols.transitiveCallees(fun2).isEmpty)
+    assert(program.symbols.transitiveCallees(fun2.id).isEmpty)
   }
 
   test("Conditions of inlined functions should not be checked") {

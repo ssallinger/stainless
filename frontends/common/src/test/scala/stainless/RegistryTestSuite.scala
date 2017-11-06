@@ -169,7 +169,7 @@ class RegistryTestSuite extends FunSuite {
 
     override def onCycleBegin() = ()
 
-    override def solve(program: Program { val trees: extraction.xlang.trees.type }): Report = {
+    override def solve(program: inox.Program { val trees: extraction.xlang.trees.type }): Report = {
       val fns = program.symbols.functions.keySet map { _.name }
       val cls = program.symbols.classes.keySet map { _.name }
 

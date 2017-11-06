@@ -91,7 +91,10 @@ trait InputUtils {
     assert(syms.classes.values.toSet == cls.toSet)
     assert(syms.functions.values.toSet == funs.toSet)
 
-    val program = inox.Program(xt)(syms)
+    // XXX(nv): the cast is necessary for the dotty compiler to accept this...
+    val program = inox.Program(xt)(syms).asInstanceOf[inox.Program {
+      val trees: xt.type
+    }]
 
     (units.toSeq, program)
   }
