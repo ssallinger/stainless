@@ -51,6 +51,7 @@ trait MainHelpers extends inox.MainHelpers {
   case object Pipelines extends Category
   case object Verification extends Category
   case object Termination extends Category
+  case object Datalog extends Category
 
   override protected def getOptions = super.getOptions - inox.solvers.optAssumeChecked ++ Map(
     optFunctions -> Description(General, "Only consider functions s1,s2,..."),
@@ -83,6 +84,7 @@ trait MainHelpers extends inox.MainHelpers {
     verification.DebugSectionCacheHit,
     verification.DebugSectionCacheMiss,
     termination.DebugSectionTermination,
+    datalog.DebugSectionDatalog,
     DebugSectionExtraction,
     frontend.DebugSectionFrontend,
     utils.DebugSectionRegistry

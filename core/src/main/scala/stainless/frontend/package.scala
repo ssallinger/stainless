@@ -39,6 +39,7 @@ package object frontend {
   val allComponents: Seq[Component] = Seq(
     verification.VerificationComponent,
     termination.TerminationComponent,
+    datalog.DatalogComponent,
     evaluators.EvaluatorComponent
   )
 
@@ -46,6 +47,7 @@ package object frontend {
   private val database = Map[String, inox.Context => CallBack](
     verification.VerificationComponent.name -> { ctx => new verification.VerificationCallBack(ctx) },
     termination.TerminationComponent.name -> { ctx => new termination.TerminationCallBack(ctx) },
+    datalog.DatalogComponent.name -> { ctx => new datalog.DatalogCallBack(ctx) },
     evaluators.EvaluatorComponent.name -> { ctx => new evaluators.EvaluatorCallBack(ctx) }
   )
 
