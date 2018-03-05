@@ -3,14 +3,14 @@
 package stainless
 package datalog
 
-import inox.utils.ASCIIHelpers.{ Cell, Row }
+import inox.utils.ASCIIHelpers.{Cell, Row}
 import stainless.utils.JsonConvertions._
 
 import io.circe._
 import io.circe.syntax._
 import io.circe.generic.semiauto._
 
-import scala.util.{ Right, Left }
+import scala.util.{Right, Left}
 
 object DatalogReport {
 
@@ -27,9 +27,13 @@ object DatalogReport {
   implicit val statusEncoder: Encoder[Status] = deriveEncoder
 
   case class Record(
-    id: Identifier, pos: inox.utils.Position, time: Long,
-    status: Status, verdict: String, kind: String,
-    derivedFrom: Identifier
+      id: Identifier,
+      pos: inox.utils.Position,
+      time: Long,
+      status: Status,
+      verdict: String,
+      kind: String,
+      derivedFrom: Identifier
   ) extends AbstractReportHelper.Record
 
   implicit val recordDecoder: Decoder[Record] = deriveDecoder
@@ -43,8 +47,9 @@ object DatalogReport {
 }
 
 // Variant of the report without the checker, where all the data is mapped to text
-class DatalogReport(val results: Seq[DatalogReport.Record], val sources: Set[Identifier])
-  extends BuildableAbstractReport[DatalogReport.Record, DatalogReport] {
+class DatalogReport(val results: Seq[DatalogReport.Record],
+                    val sources: Set[Identifier])
+    extends BuildableAbstractReport[DatalogReport.Record, DatalogReport] {
   import DatalogReport._
 
   override val encoder = recordEncoder
@@ -76,7 +81,11 @@ class DatalogReport(val results: Seq[DatalogReport.Record], val sources: Set[Ide
   }
 
   override lazy val stats =
-    ReportStats(results.size, totalTime, totalValid, totalValidFromCache, totalInvalid, totalUnknown)
+    ReportStats(results.size,
+                totalTime,
+                totalValid,
+                totalValidFromCache,
+                totalInvalid,
+                totalUnknown)
 
 }
-

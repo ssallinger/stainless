@@ -22,8 +22,14 @@ trait DatalogAnalysis extends AbstractAnalysis {
 
   override def toReport = new DatalogReport(records, sources)
 
-  private lazy val records = results.toSeq map { case (fd, time) =>
-    DatalogReport.Record(fd.id, fd.getPos, time, DatalogReport.Embeddable, "fooooo", "barrrr", derivedFrom = fd.source)
+  private lazy val records = results.toSeq map {
+    case (fd, time) =>
+      DatalogReport.Record(fd.id,
+                           fd.getPos,
+                           time,
+                           DatalogReport.Embeddable,
+                           "fooooo",
+                           "barrrr",
+                           derivedFrom = fd.source)
   }
 }
-
