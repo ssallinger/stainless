@@ -145,10 +145,14 @@ trait DatalogEmbedder {
         val newId = getNewNodeId()
         emitNode("", newId, parentId, astOrder, "UnitLiteral")
       case StringLiteral(value) =>
+        println("=========================")
+        println(value)
         //handle escape sequences: add extra backslash in front of every backslash
         var valueStr = value.replaceAll("\\\\", "\\\\\\\\")
-        for (ch <- List('b', 't', 'n', 'f', 'r', '"', '\''))
+        for (ch <- List('t', 'n', 'f', 'r', '"', '\''))
           valueStr = valueStr.replaceAll("\\" + ch, "\\\\" + ch)
+        println(valueStr)
+        println("=========================")
         emitLiteral("StringLiteral", valueStr, parentId, astOrder)
       case GenericValue(tp, id) => //TODO what does id represent? Why not "identifier"?
         val newId = getNewNodeId()
