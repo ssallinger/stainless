@@ -2,11 +2,11 @@ package stainless
 package datalog
 
 object DatalogTrees {
-  class DatalogNode(name: String,
-                    id: Int,
-                    parentId: Int,
-                    astOrder: Int,
-                    nodeType: String) {
+  class DatalogNode(val name: String,
+                    val id: Int,
+                    val parentId: Int,
+                    val astOrder: Int,
+                    val nodeType: String) {
     //NB: for some Nodes order of parameters matters!
     private var params = List[DatalogParameter]()
     def addParameter(name: String, value: String) = {
