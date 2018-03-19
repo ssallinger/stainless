@@ -326,11 +326,11 @@ trait DatalogEmbedder {
         emit(default, node.id, 0)
         emit(size, node.id, 1)
         emit(base, node.id, 2)
-        var counter = 0
-        //represent map: parameterOrder = key, value = astOrder of expr. child that corresponds to value
+        var counter = 3
         for ((index, value) <- elems) {
           emit(value, node.id, counter)
-          node.addParameter("value", counter.toString)//TODO is this still valid????
+          node.addParameter("index", index.toString)
+          node.addParameter("value", counter.toString) //value = astOrder of expr. child that corresponds to value
           counter = counter + 1
         }
       case ArraySelect(array, index) =>
