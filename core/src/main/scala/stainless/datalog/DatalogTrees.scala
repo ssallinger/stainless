@@ -18,7 +18,7 @@ object DatalogTrees {
         case "_" => "_"
         case n => s""""$n""""
       }
-      s"""Node(${nameStr}, ${id}, ${parentId}, $astOrder, "$nodeType").\n""" + embedParameters(
+      s"""Node(${nameStr}, ${id}, ${parentId}, $astOrder, $nodeType).\n""" + embedParameters(
         params,
         id,
         0)
