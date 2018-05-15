@@ -552,10 +552,6 @@ trait DatalogEmbedder {
     emit(fd.returnType, node.id, counter)
     counter = counter + 1
 
-    for (callee <- program.symbols.callees(fd.id)) {
-      node.addParameter("calls", callee.globalId.toString)
-    }
-
   }
 
   def emit(adt: ADTDefinition, parentId: Int, astOrder: Int): Unit = {
