@@ -559,12 +559,14 @@ trait DatalogEmbedder {
       case sort: ADTSort =>
         val node = emitNode(adt.id.name, parentId, astOrder, "ADTSort", adt.getPos.toString)
         node.addParameter("id", adt.id.globalId.toString)
+        for (con <- sort.cons) {
+          node.addParameter("constructor", con.globalId.toString)
+        }
         var counter = 0
         for (tparam <- adt.tparams) {
           emit(tparam, node.id, counter)
           counter = counter + 1
         }
-      //TODO pointers to constructors needed?
 
       case cons: ADTConstructor =>
         val node =
